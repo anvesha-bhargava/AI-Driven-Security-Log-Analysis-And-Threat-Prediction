@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Security Log Analyzer</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:1100px;margin:32px auto;padding:0 16px;background:#f5f7fb;color:#182230}
+.card{background:white;padding:20px;margin:16px 0;border-radius:12px;box-shadow:0 2px 10px #0000000c}
+button{padding:10px 16px;border:0;border-radius:8px;background:#3347a9;color:white}
+table{width:100%;border-collapse:collapse;overflow-wrap:anywhere}th,td{padding:9px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
+.error{color:#a11}small{color:#555}
+</style>
+</head>
+<body>
+<h1>AI-Driven Security Log Analysis &amp; Threat Prediction</h1>
+<p>Upload a CSV security log to review activity grouped by source IP.</p>
+<div class="card">
+<form method="post" enctype="multipart/form-data">
+<input type="file" name="logfile" accept=".csv" required>
+<button type="submit">Analyze logs</button>
+</form>
+<p><small>Use only logs you are authorized to analyze. This is an academic demonstration, not a production security tool.</small></p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+</div>
+{% if results %}
+<div class="card">
+<h2>Summary</h2>
+<p><b>Total events:</b> {{ results.total_events }} &nbsp; <b>Unique source IPs:</b> {{ results.unique_ips }} &nbsp; <b>IPs requiring review:</b> {{ results.alerts }}</p>
+</div>
+<div class="card">
+<h2>Analysis by source IP</h2>
+<table><thead><tr><th>Source IP</th><th>Events</th><th>Failed logins</th><th>Successful logins</th><th>Unique usernames</th><th>Risk score</th><th>ML output</th><th>Rule alert</th></tr></thead>
+<tbody>{% for row in results.rows %}
+<tr><td>{{ row.source_ip }}</td><td>{{ row.event_count }}</td><td>{{ row.failed_logins }}</td><td>{{ row.success_logins }}</td><td>{{ row.unique_users }}</td><td>{{ row.risk_score }}</td><td>{{ row.ml_prediction }}</td><td>{{ row.rule_alert }}</td></tr>
+{% endfor %}</tbody></table>
+</div>
+{% endif %}
+</body></html>
