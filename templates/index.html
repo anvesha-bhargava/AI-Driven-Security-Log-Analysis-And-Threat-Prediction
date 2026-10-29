@@ -1,39 +1,1047 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Security Log Analyzer</title>
-<style>
-body{font-family:Arial,sans-serif;max-width:1100px;margin:32px auto;padding:0 16px;background:#f5f7fb;color:#182230}
-.card{background:white;padding:20px;margin:16px 0;border-radius:12px;box-shadow:0 2px 10px #0000000c}
-button{padding:10px 16px;border:0;border-radius:8px;background:#3347a9;color:white}
-table{width:100%;border-collapse:collapse;overflow-wrap:anywhere}th,td{padding:9px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
-.error{color:#a11}small{color:#555}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Security Operations Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #080d18;
+            --panel: #111a2b;
+            --panel-hover: #172338;
+            --border: #26364f;
+            --text: #e5edf8;
+            --muted: #91a3bb;
+            --blue: #38bdf8;
+            --red: #fb7185;
+            --amber: #fbbf24;
+            --green: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            background: #0c1424;
+            border-bottom: 1px solid var(--border);
+            padding: 26px 5%;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-content {
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+            color: #f8fafc;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .header-label {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 6px 10px;
+            background: #102b3c;
+            border: 1px solid #155e75;
+            border-radius: 20px;
+            color: #7dd3fc;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        main {
+            max-width: 1450px;
+            margin: auto;
+            padding: 28px 5%;
+        }
+
+        .section-title {
+            margin: 30px 0 16px;
+            font-size: 21px;
+            color: #f1f5f9;
+        }
+
+        .section-subtitle {
+            margin: -8px 0 18px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            min-width: 0;
+        }
+
+        .card h2,
+        .card h3 {
+            color: #f1f5f9;
+        }
+
+        .upload-card {
+            margin-bottom: 24px;
+        }
+
+        .upload-card h2 {
+            margin-top: 0;
+        }
+
+        .upload-form {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        input[type="file"] {
+            max-width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #0b1322;
+            color: var(--text);
+        }
+
+        input[type="file"]::file-selector-button {
+            padding: 8px 12px;
+            margin-right: 12px;
+            border: 0;
+            border-radius: 5px;
+            background: #26364f;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        button {
+            padding: 11px 17px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: #0ea5e9;
+            color: #04111e;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        button:hover {
+            background: var(--blue);
+            transform: translateY(-1px);
+        }
+
+        button:focus,
+        input:focus,
+        select:focus {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            border-left: 4px solid var(--blue);
+        }
+
+        .stat-card:nth-child(2) {
+            border-left-color: #a78bfa;
+        }
+
+        .stat-card:nth-child(3) {
+            border-left-color: var(--red);
+        }
+
+        .stat-card p {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .stat-card h2 {
+            margin: 0;
+            font-size: 34px;
+            color: var(--blue);
+        }
+
+        .stat-card:nth-child(2) h2 {
+            color: #c4b5fd;
+        }
+
+        .stat-card:nth-child(3) h2 {
+            color: var(--red);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 20px;
+            font-size: 17px;
+        }
+
+        .chart-area {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .filter-card {
+            margin: 16px 0;
+        }
+
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 14px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-field label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #c0cee0;
+        }
+
+        .filter-field input,
+        .filter-field select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #0b1322;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .filter-field input::placeholder {
+            color: #71839d;
+        }
+
+        .reset-button {
+            background: #34445c;
+            color: white;
+        }
+
+        .reset-button:hover {
+            background: #465b78;
+        }
+
+        .export-button {
+            background: #166534;
+            color: #dcfce7;
+        }
+
+        .export-button:hover {
+            background: #15803d;
+        }
+
+        #filterCount {
+            margin: 16px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .table-card {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 13px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        th {
+            background: #172338;
+            color: #cbd9eb;
+            font-weight: bold;
+        }
+
+        td {
+            color: #dce6f4;
+        }
+
+        tbody tr {
+            background: var(--panel);
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: var(--panel-hover);
+        }
+
+        tbody tr[hidden] {
+            display: none;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .severity-high {
+            color: #fecdd3;
+            background: #4c1726;
+            border: 1px solid #9f3046;
+        }
+
+        .severity-medium {
+            color: #fde68a;
+            background: #422f12;
+            border: 1px solid #8c651b;
+        }
+
+        .severity-low {
+            color: #bbf7d0;
+            background: #123523;
+            border: 1px solid #246b43;
+        }
+
+        .message-error {
+            margin: 16px 0;
+            padding: 14px;
+            border: 1px solid #9f3046;
+            border-radius: 8px;
+            background: #351522;
+            color: #fecdd3;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 28px;
+            color: var(--muted);
+        }
+
+        .notice {
+            margin-top: 20px;
+            padding: 14px 16px;
+            background: #101d30;
+            border: 1px solid #263b57;
+            border-radius: 9px;
+            color: #a9bdd5;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        footer {
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+        }
+
+        @media (max-width: 850px) {
+            .charts-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 23px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            main {
+                padding: 20px 4%;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .filter-field {
+                min-width: 100%;
+            }
+
+            .chart-area {
+                height: 260px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<h1>AI-Driven Security Log Analysis &amp; Threat Prediction</h1>
-<p>Upload a CSV security log to review activity grouped by source IP.</p>
-<div class="card">
-<form method="post" enctype="multipart/form-data">
-<input type="file" name="logfile" accept=".csv" required>
-<button type="submit">Analyze logs</button>
-</form>
-<p><small>Use only logs you are authorized to analyze. This is an academic demonstration, not a production security tool.</small></p>
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
-</div>
-{% if results %}
-<div class="card">
-<h2>Summary</h2>
-<p><b>Total events:</b> {{ results.total_events }} &nbsp; <b>Unique source IPs:</b> {{ results.unique_ips }} &nbsp; <b>IPs requiring review:</b> {{ results.alerts }}</p>
-</div>
-<div class="card">
-<h2>Analysis by source IP</h2>
-<table><thead><tr><th>Source IP</th><th>Events</th><th>Failed logins</th><th>Successful logins</th><th>Unique usernames</th><th>Risk score</th><th>ML output</th><th>Rule alert</th></tr></thead>
-<tbody>{% for row in results.rows %}
-<tr><td>{{ row.source_ip }}</td><td>{{ row.event_count }}</td><td>{{ row.failed_logins }}</td><td>{{ row.success_logins }}</td><td>{{ row.unique_users }}</td><td>{{ row.risk_score }}</td><td>{{ row.ml_prediction }}</td><td>{{ row.rule_alert }}</td></tr>
-{% endfor %}</tbody></table>
-</div>
-{% endif %}
-</body></html>
+
+<header>
+    <div class="header-content">
+        <h1>AI-Driven Security Log Analysis</h1>
+        <p>Security monitoring, suspicious activity analysis and threat prediction</p>
+        <span class="header-label">SECURITY OPERATIONS DASHBOARD</span>
+    </div>
+</header>
+
+<main>
+
+    <!-- CSV UPLOAD -->
+    <section class="card upload-card">
+        <h2>Upload Security Logs</h2>
+
+        <p class="muted">
+            Upload a CSV file containing security events for analysis.
+        </p>
+
+        <form class="upload-form"
+              action="/"
+              method="POST"
+              enctype="multipart/form-data">
+
+            <input
+                type="file"
+                name="logfile"
+                accept=".csv"
+                required
+            >
+
+            <button type="submit">Analyze Logs</button>
+        </form>
+    </section>
+
+    <!-- ERROR MESSAGE -->
+    {% if error %}
+        <div class="message-error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    {% if results %}
+
+        <!-- SUMMARY CARDS -->
+        <h2 class="section-title">Analysis Overview</h2>
+        <p class="section-subtitle">
+            Summary of the uploaded security log file
+        </p>
+
+        <section class="stats-grid">
+
+            <div class="card stat-card">
+                <p>Total Security Events</p>
+                <h2>{{ results.total_events }}</h2>
+            </div>
+
+            <div class="card stat-card">
+                <p>Unique Source IPs</p>
+                <h2>{{ results.unique_ips }}</h2>
+            </div>
+
+            <div class="card stat-card">
+                <p>IPs Requiring Review</p>
+                <h2>{{ results.alerts }}</h2>
+            </div>
+
+        </section>
+
+        <!-- CHARTS -->
+        <h2 class="section-title">Security Visualizations</h2>
+        <p class="section-subtitle">
+            Compare login activity, risk scores and model predictions
+        </p>
+
+        <section class="charts-grid">
+
+            <div class="card chart-card">
+                <h3>Login Activity by Source IP</h3>
+                <div class="chart-area">
+                    <canvas id="loginChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <h3>Risk Score by Source IP</h3>
+                <div class="chart-area">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <h3>ML Threat Classification</h3>
+                <div class="chart-area">
+                    <canvas id="threatChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card chart-card">
+                <h3>Failed Login Attempts</h3>
+                <div class="chart-area">
+                    <canvas id="failedChart"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- SOURCE IP TABLE -->
+        <h2 class="section-title">Analysis by Source IP</h2>
+        <p class="section-subtitle">
+            Search IPs, filter by risk level, or export visible results
+        </p>
+
+        <!-- FILTERS -->
+        <section class="card filter-card">
+
+            <div class="filter-controls">
+
+                <div class="filter-field">
+                    <label for="ipSearch">Search Source IP</label>
+                    <input
+                        type="text"
+                        id="ipSearch"
+                        placeholder="e.g. 192.168.1.30"
+                    >
+                </div>
+
+                <div class="filter-field">
+                    <label for="riskFilter">Risk Level</label>
+                    <select id="riskFilter">
+                        <option value="all">All Risk Levels</option>
+                        <option value="high">High (60–100)</option>
+                        <option value="medium">Medium (30–59)</option>
+                        <option value="low">Low (0–29)</option>
+                    </select>
+                </div>
+
+                <button
+                    type="button"
+                    class="reset-button"
+                    id="resetFilters"
+                >
+                    Reset Filters
+                </button>
+
+                <button
+                    type="button"
+                    class="export-button"
+                    id="exportCsv"
+                >
+                    Export CSV
+                </button>
+
+            </div>
+
+            <p id="filterCount">Showing all results</p>
+
+        </section>
+
+        <!-- RESULTS TABLE -->
+        <section class="card table-card">
+
+            <table id="resultsTable">
+
+                <thead>
+                    <tr>
+                        <th>Source IP</th>
+                        <th>Total Events</th>
+                        <th>Failed Logins</th>
+                        <th>Successful Logins</th>
+                        <th>Unique Usernames</th>
+                        <th>Risk Score</th>
+                        <th>ML Prediction</th>
+                        <th>Rule Alert</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in results.rows %}
+                    <tr>
+                        <td>{{ row.source_ip }}</td>
+                        <td>{{ row.event_count }}</td>
+                        <td>{{ row.failed_logins }}</td>
+                        <td>{{ row.success_logins }}</td>
+                        <td>{{ row.unique_users }}</td>
+                        <td class="risk-value">{{ row.risk_score }}</td>
+                        <td>{{ row.ml_prediction }}</td>
+                        <td>{{ row.rule_alert }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            No source IP results found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+
+        </section>
+
+        <div class="notice">
+            <strong>Interpretation note:</strong>
+            Risk levels are based on the project's current scoring thresholds.
+            ML predictions come from a demonstration model trained on synthetic
+            examples. These results are intended for academic analysis and do
+            not independently confirm malicious activity.
+        </div>
+
+        <!-- CHARTS, FILTERS AND CSV EXPORT -->
+        <script>
+            const rows = {{ results.rows | tojson }};
+
+            const labels = rows.map(row => row.source_ip);
+
+            const failedLogins = rows.map(
+                row => Number(row.failed_logins) || 0
+            );
+
+            const successfulLogins = rows.map(
+                row => Number(row.success_logins) || 0
+            );
+
+            const riskScores = rows.map(
+                row => Number(row.risk_score) || 0
+            );
+
+            const predictions = rows.map(
+                row => row.ml_prediction || "Unknown"
+            );
+
+            // Count IPs by ML prediction.
+            const threatCounts = {};
+
+            predictions.forEach(prediction => {
+                threatCounts[prediction] =
+                    (threatCounts[prediction] || 0) + 1;
+            });
+
+            // Shared dark-theme chart settings.
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                color: "#cbd5e1",
+
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: "#cbd5e1",
+                            padding: 18
+                        }
+                    },
+
+                    tooltip: {
+                        backgroundColor: "#0b1322",
+                        titleColor: "#f8fafc",
+                        bodyColor: "#e2e8f0",
+                        borderColor: "#334155",
+                        borderWidth: 1
+                    }
+                },
+
+                scales: {
+                    x: {
+                        ticks: {
+                            color: "#94a3b8"
+                        },
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.12)"
+                        }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: "#94a3b8",
+                            precision: 0
+                        },
+                        grid: {
+                            color: "rgba(148, 163, 184, 0.12)"
+                        }
+                    }
+                }
+            };
+
+            // CHART 1: Login activity.
+            new Chart(document.getElementById("loginChart"), {
+                type: "bar",
+
+                data: {
+                    labels: labels,
+
+                    datasets: [
+                        {
+                            label: "Failed Logins",
+                            data: failedLogins,
+                            backgroundColor: "#fb7185",
+                            borderRadius: 5
+                        },
+                        {
+                            label: "Successful Logins",
+                            data: successfulLogins,
+                            backgroundColor: "#4ade80",
+                            borderRadius: 5
+                        }
+                    ]
+                },
+
+                options: {
+                    ...chartOptions,
+
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // CHART 2: Risk score.
+            new Chart(document.getElementById("riskChart"), {
+                type: "bar",
+
+                data: {
+                    labels: labels,
+
+                    datasets: [{
+                        label: "Risk Score",
+                        data: riskScores,
+
+                        backgroundColor: riskScores.map(score => {
+                            if (score >= 60) return "#fb7185";
+                            if (score >= 30) return "#fbbf24";
+                            return "#4ade80";
+                        }),
+
+                        borderRadius: 5
+                    }]
+                },
+
+                options: {
+                    ...chartOptions,
+
+                    scales: {
+                        ...chartOptions.scales,
+
+                        y: {
+                            ...chartOptions.scales.y,
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // CHART 3: ML classification.
+            new Chart(document.getElementById("threatChart"), {
+                type: "doughnut",
+
+                data: {
+                    labels: Object.keys(threatCounts),
+
+                    datasets: [{
+                        label: "Source IPs",
+                        data: Object.values(threatCounts),
+
+                        backgroundColor: [
+                            "#fb7185",
+                            "#4ade80",
+                            "#fbbf24",
+                            "#a78bfa",
+                            "#38bdf8"
+                        ],
+
+                        borderColor: "#111a2b",
+                        borderWidth: 3
+                    }]
+                },
+
+                options: {
+                    ...chartOptions,
+                    cutout: "62%",
+                    scales: {}
+                }
+            });
+
+            // CHART 4: Failed login attempts.
+            new Chart(document.getElementById("failedChart"), {
+                type: "line",
+
+                data: {
+                    labels: labels,
+
+                    datasets: [{
+                        label: "Failed Login Attempts",
+                        data: failedLogins,
+                        borderColor: "#fb7185",
+                        backgroundColor: "rgba(251, 113, 133, 0.12)",
+                        pointBackgroundColor: "#fb7185",
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.25
+                    }]
+                },
+
+                options: {
+                    ...chartOptions,
+
+                    scales: {
+                        ...chartOptions.scales,
+
+                        y: {
+                            ...chartOptions.scales.y,
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // SEARCH, RISK FILTER AND EXPORT.
+            (function () {
+                const searchInput =
+                    document.getElementById("ipSearch");
+
+                const riskFilter =
+                    document.getElementById("riskFilter");
+
+                const resetButton =
+                    document.getElementById("resetFilters");
+
+                const exportButton =
+                    document.getElementById("exportCsv");
+
+                const countLabel =
+                    document.getElementById("filterCount");
+
+                const table =
+                    document.getElementById("resultsTable");
+
+                if (
+                    !searchInput ||
+                    !riskFilter ||
+                    !resetButton ||
+                    !exportButton ||
+                    !table
+                ) {
+                    return;
+                }
+
+                const tableBody = table.querySelector("tbody");
+
+                const tableRows = Array.from(
+                    tableBody.querySelectorAll("tr")
+                ).filter(row => row.cells.length === 8);
+
+                // Add severity badges.
+                tableRows.forEach(row => {
+                    const riskCell = row.cells[5];
+                    const score = Number(
+                        riskCell.textContent.trim()
+                    );
+
+                    let level = "low";
+
+                    if (score >= 60) {
+                        level = "high";
+                    } else if (score >= 30) {
+                        level = "medium";
+                    }
+
+                    const badge = document.createElement("span");
+
+                    badge.className =
+                        "severity-badge severity-" + level;
+
+                    badge.textContent =
+                        score + " — " +
+                        level.charAt(0).toUpperCase() +
+                        level.slice(1);
+
+                    riskCell.textContent = "";
+                    riskCell.appendChild(badge);
+
+                    row.dataset.risk = level;
+                });
+
+                // Apply search and risk filters.
+                function applyFilters() {
+                    const query = searchInput.value
+                        .trim()
+                        .toLowerCase();
+
+                    const selectedRisk = riskFilter.value;
+                    let visibleCount = 0;
+
+                    tableRows.forEach(row => {
+                        const ip = row.cells[0]
+                            .textContent
+                            .toLowerCase();
+
+                        const matchesIP = ip.includes(query);
+
+                        const matchesRisk =
+                            selectedRisk === "all" ||
+                            row.dataset.risk === selectedRisk;
+
+                        const show = matchesIP && matchesRisk;
+
+                        row.hidden = !show;
+
+                        if (show) {
+                            visibleCount++;
+                        }
+                    });
+
+                    countLabel.textContent =
+                        `Showing ${visibleCount} of ` +
+                        `${tableRows.length} source IPs`;
+                }
+
+                searchInput.addEventListener(
+                    "input",
+                    applyFilters
+                );
+
+                riskFilter.addEventListener(
+                    "change",
+                    applyFilters
+                );
+
+                // Reset all filters.
+                resetButton.addEventListener("click", function () {
+                    searchInput.value = "";
+                    riskFilter.value = "all";
+                    applyFilters();
+                });
+
+                // Export currently visible table rows to CSV.
+                exportButton.addEventListener("click", function () {
+                    const headers = Array.from(
+                        table.querySelectorAll("thead th")
+                    ).map(cell => cell.textContent.trim());
+
+                    const visibleRows = tableRows.filter(
+                        row => !row.hidden
+                    );
+
+                    const csvData = [
+                        headers,
+
+                        ...visibleRows.map(row => {
+                            return Array.from(
+                                row.cells
+                            ).map((cell, index) => {
+                                let value = cell.textContent.trim();
+
+                                if (index === 5) {
+                                    value = value.split(" — ")[0];
+                                }
+
+                                return '"' +
+                                    value.replace(/"/g, '""') +
+                                    '"';
+                            });
+                        })
+                    ];
+
+                    const csvContent =
+                        "\uFEFF" +
+                        csvData
+                            .map(row => row.join(","))
+                            .join("\r\n");
+
+                    const blob = new Blob(
+                        [csvContent],
+                        {
+                            type: "text/csv;charset=utf-8;"
+                        }
+                    );
+
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+
+                    link.href = url;
+                    link.download =
+                        "security_analysis_filtered.csv";
+
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+
+                    URL.revokeObjectURL(url);
+                });
+
+                applyFilters();
+            })();
+        </script>
+
+    {% else %}
+
+        <section class="card empty-state">
+            <h3>No logs analyzed yet</h3>
+
+            <p>
+                Upload a CSV file above and click Analyze Logs
+                to see your security analysis and charts.
+            </p>
+        </section>
+
+    {% endif %}
+
+</main>
+
+<footer>
+    AI-Driven Security Log Analysis and Threat Prediction
+    | Academic Project Prototype
+</footer>
+
+</body>
+</html>
